@@ -16,7 +16,7 @@ Concepto: `Concepto_PWA_VentaCositas.md` (alcance congelado D1–D9)
 1. **Shell PWA** — hash router, store, IndexedDB, SW, manifest, Inicio — **COMPLETO**
 2. **Modo Cositas** — alta, edición, swipe-descarte (confirmación+motivo), compresión de fotos — **COMPLETO**
 3. **Modo Gestión + Detalle** — filtros, orden, búsqueda, vender (genera `ventas`), descartar — **COMPLETO**
-4. **Historial + Config + QA**
+4. **Historial + Config + QA** — **COMPLETO**
 
 ## Sprint 1 — Tareas
 
@@ -48,6 +48,15 @@ Concepto: `Concepto_PWA_VentaCositas.md` (alcance congelado D1–D9)
 - [x] S3.6 Lógica pura: `venderArticulo`, `descartarArticulo`
 - [x] S3.7 Tests (extender test.mjs) + verificación
 
+## Sprint 4 — Tareas
+
+- [x] S4.1 Vista Historial: listado de `ventas` (fecha desc) + total vendido + estado vacío
+- [x] S4.2 Vista Config: tema (auto/claro/oscuro) + acerca de (versión)
+- [x] S4.3 Lógica pura: `formatearFecha`, `resolverTema`, `sumarVentas` (test-first)
+- [x] S4.4 SW: bump versión + precache de `historial.js` y assets
+- [x] S4.5 Tests (extender test.mjs) + `node --check` integral
+- [x] S4.6 QA/pulido: navegación Home→Historial→Config + consistencia store↔db
+
 ## Evidencia de commits
 
 | Commit | Tarea | Notas |
@@ -56,3 +65,4 @@ Concepto: `Concepto_PWA_VentaCositas.md` (alcance congelado D1–D9)
 | `06178f3` | S1.1–S1.7 | shell PWA completo (14/14 tests verdes, verificado por gentle-ai-verify) |
 | `26d7725` | S2.1–S2.7 | modo Cositas completo (28/28 tests verdes, verificado) |
 | `788c2ec` | S3.1–S3.7 | modo Gestión + Detalle completo (49/49 tests verdes, verificado) |
+| `2816922` | S4.1–S4.6 | Historial + Config + QA (58/58 tests verdes, verificado) |
