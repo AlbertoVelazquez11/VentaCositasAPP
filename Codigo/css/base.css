@@ -247,3 +247,350 @@ img {
     transition: none !important;
   }
 }
+
+/* Variante de botón peligro */
+.btn--danger {
+  background: var(--c-danger);
+  color: var(--c-text-invert);
+}
+
+.btn--danger:active {
+  background: #B91C1C;
+}
+
+/* Toggle segmentado de modo */
+.segmented {
+  display: flex;
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  padding: var(--s-1);
+  gap: var(--s-1);
+  width: 100%;
+}
+
+.segmented__item {
+  flex: 1;
+  min-height: 40px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: transparent;
+  color: var(--c-text-muted);
+  font-weight: 600;
+}
+
+.segmented__item--active {
+  background: var(--c-surface);
+  color: var(--c-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Vista de artículos */
+.articulos__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin-bottom: var(--s-4);
+}
+
+.articulos__body {
+  padding-bottom: calc(var(--safe-bottom) + 88px);
+}
+
+.articulos__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+/* Fila swipe + contenido */
+.swipe-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r-lg);
+  background: var(--c-danger);
+  touch-action: pan-y;
+}
+
+.swipe-item::before {
+  content: 'Descartar';
+  position: absolute;
+  top: 0;
+  right: var(--s-4);
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.articulo {
+  position: relative;
+  display: flex;
+  gap: var(--s-3);
+  align-items: center;
+  padding: var(--s-3);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.05s linear;
+}
+
+.articulo--terminal {
+  opacity: 0.75;
+}
+
+.articulo__thumb {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 auto;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--c-surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.articulo__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.articulo__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.articulo__nombre {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.articulo__precio {
+  color: var(--c-primary);
+  font-weight: 700;
+}
+
+/* Badges de estatus */
+.badge--almacenado {
+  background: var(--c-surface-2);
+  color: var(--c-text-muted);
+}
+
+.badge--en-venta {
+  background: var(--c-accent);
+  color: #fff;
+}
+
+.badge--vendido {
+  background: var(--c-success);
+  color: #fff;
+}
+
+.badge--descartado {
+  background: var(--c-danger);
+  color: #fff;
+}
+
+/* Botón flotante de alta */
+.fab {
+  position: fixed;
+  right: var(--s-4);
+  bottom: calc(var(--safe-bottom) + var(--s-5));
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  background: var(--c-primary);
+  color: #fff;
+  font-size: 30px;
+  line-height: 1;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.fab:active {
+  background: var(--c-primary-strong);
+  transform: scale(0.96);
+}
+
+/* Modal genérico */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-4);
+  z-index: 100;
+  animation: modal-fade 0.15s ease;
+}
+
+.modal {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 420px;
+  max-height: calc(100vh - var(--s-8));
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal__header {
+  padding: var(--s-4) var(--s-4) 0;
+}
+
+.modal__title {
+  font-size: 20px;
+}
+
+.modal__body {
+  padding: var(--s-3) var(--s-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.modal__footer {
+  padding: 0 var(--s-4) var(--s-4);
+  display: flex;
+  gap: var(--s-3);
+  justify-content: flex-end;
+}
+
+.modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.modal__field textarea {
+  width: 100%;
+  padding: var(--s-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-bg);
+  resize: vertical;
+}
+
+.modal__error {
+  color: var(--c-danger);
+  font-size: 14px;
+}
+
+@keyframes modal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Formulario de artículo */
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.formulario__errores {
+  background: var(--c-danger);
+  color: #fff;
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  font-size: 14px;
+}
+
+.formulario__campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.formulario__etiqueta {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text-muted);
+}
+
+.formulario input[type="text"],
+.formulario input[type="number"],
+.formulario textarea {
+  width: 100%;
+  padding: var(--s-3);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  background: var(--c-bg);
+}
+
+.formulario textarea {
+  resize: vertical;
+}
+
+.formulario input[type="file"] {
+  font-size: 14px;
+}
+
+.formulario__foto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.formulario__foto img {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: var(--r-md);
+  border: 1px solid var(--c-border);
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--safe-bottom) + var(--s-5));
+  transform: translate(-50%, 20px);
+  background: var(--c-surface);
+  color: var(--c-text);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-pill);
+  padding: var(--s-3) var(--s-4);
+  box-shadow: var(--shadow-lg);
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 200;
+  pointer-events: none;
+  max-width: calc(100vw - var(--s-8));
+}
+
+.toast--success {
+  background: var(--c-success);
+  color: #fff;
+  border-color: transparent;
+}
+
+.toast--visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}

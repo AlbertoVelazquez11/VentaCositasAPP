@@ -1,5 +1,5 @@
 // sw.js — Service Worker cache-first (offline-first) para el shell de VentaCositas.
-const CACHE = 'ventacositas-v1';
+const CACHE = 'ventacositas-v2';
 
 const CORE = [
   './',
@@ -13,7 +13,12 @@ const CORE = [
   './js/db.js',
   './js/negocio.js',
   './js/views/home.js',
+  './js/views/articulos.js',
   './js/views/config.js',
+  './js/components/modal.js',
+  './js/components/toast.js',
+  './js/components/swipe-item.js',
+  './js/utils/imagen.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
 ];

@@ -1,7 +1,8 @@
 // Tests deterministas de los módulos puros del shell (Sprint 1).
 // Sin dependencias: usa node:assert. Uso: node scripts/test.mjs
 import assert from 'node:assert/strict';
-import { ESTATUS, TRANSICIONES, puedeTransicionar, esTerminal } from '../Codigo/js/negocio.js';
+import { ESTATUS, TRANSICIONES, puedeTransicionar, esTerminal, validarArticulo, crearArticulo } from '../Codigo/js/negocio.js';
+import { calcularDimensiones } from '../Codigo/js/utils/imagen.js';
 import { Store, store } from '../Codigo/js/store.js';
 import { parseHash } from '../Codigo/js/router.js';
 
@@ -145,6 +146,94 @@ t('parseHash extrae query params', () => {
 
 t('parseHash normaliza la barra final', () => {
   assert.deepEqual(parseHash('#/articulos/'), { path: '/articulos', params: {} });
+});
+
+console.log('\nnegocio.js — validarArticulo / crearArticulo');
+t('validarArticulo acepta un artículo válido', () => {
+  const r = validarArticulo({ nombre: 'Llavero', precioSugerido: 50 });
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.errores, {});
+});
+
+t('validarArticulo exige nombre', () => {
+  const r = validarArticulo({ precioSugerido: 50 });
+  assert.equal(r.ok, false);
+  assert.ok(r.errores.nombre);
+});
+
+t('validarArticulo rechaza nombre solo con espacios', () => {
+  const r = validarArticulo({ nombre: '   ', precioSugerido: 50 });
+  assert.equal(r.ok, false);
+  assert.ok(r.errores.nombre);
+});
+
+t('validarArticulo exige precioSugerido', () => {
+  const r = validarArticulo({ nombre: 'Taza' });
+  assert.equal(r.ok, false);
+  assert.ok(r.errores.precioSugerido);
+});
+
+t('validarArticulo rechaza precio no mayor a 0', () => {
+  for (const p of [0, -5, 'abc', null, '']) {
+    const r = validarArticulo({ nombre: 'Taza', precioSugerido: p });
+    assert.equal(r.ok, false, `precio ${p} debería fallar`);
+    assert.ok(r.errores.precioSugerido);
+  }
+});
+
+t('validarArticulo acepta precio como string numérico', () => {
+  const r = validarArticulo({ nombre: 'Taza', precioSugerido: '12.5' });
+  assert.equal(r.ok, true);
+});
+
+t('crearArticulo aplica defaults e inyecta id/ahora', () => {
+  const a = crearArticulo({ nombre: 'Taza', precioSugerido: 80 }, { id: 'id-1', ahora: 123 });
+  assert.equal(a.id, 'id-1');
+  assert.equal(a.fechaRegistro, 123);
+  assert.equal(a.estatus, ESTATUS.ALMACENADO);
+  assert.equal(a.nombre, 'Taza');
+  assert.equal(a.precioSugerido, 80);
+  assert.equal(a.descripcion, '');
+  assert.equal(a.detalles, '');
+  assert.equal('foto' in a, false);
+});
+
+t('crearArticulo conserva foto cuando se provee', () => {
+  const a = crearArticulo({ nombre: 'Taza', precioSugerido: 80, foto: 'blob' }, { id: 'id-2', ahora: 200 });
+  assert.equal(a.foto, 'blob');
+});
+
+t('crearArticulo genera id y fecha por defecto', () => {
+  const a = crearArticulo({ nombre: 'Taza', precioSugerido: 80 });
+  assert.equal(typeof a.id, 'string');
+  assert.ok(a.id.length > 0);
+  assert.equal(typeof a.fechaRegistro, 'number');
+  assert.ok(a.fechaRegistro > 0);
+});
+
+console.log('\nimagen.js — calcularDimensiones');
+t('calcularDimensiones no escala si cabe en maxLado', () => {
+  assert.deepEqual(calcularDimensiones(400, 300, 800), { ancho: 400, alto: 300 });
+});
+
+t('calcularDimensiones escala horizontal manteniendo el ratio', () => {
+  assert.deepEqual(calcularDimensiones(1600, 800, 800), { ancho: 800, alto: 400 });
+});
+
+t('calcularDimensiones escala vertical manteniendo el ratio', () => {
+  assert.deepEqual(calcularDimensiones(800, 1600, 800), { ancho: 400, alto: 800 });
+});
+
+t('calcularDimensiones redondea sin exceder maxLado', () => {
+  const r = calcularDimensiones(1000, 333, 800);
+  assert.equal(r.ancho, 800);
+  assert.equal(r.alto, 266);
+  assert.ok(r.ancho <= 800 && r.alto <= 800);
+});
+
+t('calcularDimensiones devuelve cero para entrada inválida', () => {
+  assert.deepEqual(calcularDimensiones(0, 0, 800), { ancho: 0, alto: 0 });
+  assert.deepEqual(calcularDimensiones(-10, 100, 800), { ancho: 0, alto: 0 });
 });
 
 console.log(`\n${passed} ok, ${failed} fallaron`);

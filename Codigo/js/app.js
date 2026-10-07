@@ -2,6 +2,7 @@
 import { iniciar, registrarRuta } from './router.js';
 import { openDB } from './db.js';
 import { home } from './views/home.js';
+import { articulos } from './views/articulos.js';
 import { config } from './views/config.js';
 
 /** Placeholder de pantallas que llegan en sprints posteriores. */
@@ -25,7 +26,7 @@ function placeholder(titulo, icono, descripcion) {
 
 // Rutas del shell.
 registrarRuta('/', home);
-registrarRuta('/articulos', placeholder('Artículos', '📦', 'Gestión de artículos y modo Cositas.'));
+registrarRuta('/articulos', articulos);
 registrarRuta('/historial', placeholder('Historial', '🧾', 'Historial de ventas.'));
 registrarRuta('/config', config);
 
