@@ -15,7 +15,7 @@ Concepto: `Concepto_PWA_VentaCositas.md` (alcance congelado D1–D9)
 
 1. **Shell PWA** — hash router, store, IndexedDB, SW, manifest, Inicio — **COMPLETO**
 2. **Modo Cositas** — alta, edición, swipe-descarte (confirmación+motivo), compresión de fotos — **COMPLETO**
-3. **Modo Gestión + Detalle** — filtros, orden, búsqueda, vender (genera `ventas`), descartar
+3. **Modo Gestión + Detalle** — filtros, orden, búsqueda, vender (genera `ventas`), descartar — **COMPLETO**
 4. **Historial + Config + QA**
 
 ## Sprint 1 — Tareas
@@ -38,6 +38,16 @@ Concepto: `Concepto_PWA_VentaCositas.md` (alcance congelado D1–D9)
 - [x] S2.6 Componentes: `modal` (motivo), `toast`, `swipe-item`, util de compresión de imagen
 - [x] S2.7 Lógica pura + tests: `validarArticulo`, `crearArticulo`, `calcularDimensiones` (test-first)
 
+## Sprint 3 — Tareas
+
+- [x] S3.1 Modo Gestión: filtro por estatus + orden por precio + búsqueda por texto (reemplaza placeholder)
+- [x] S3.2 Detalle (modal): info completa del artículo + acciones según estado
+- [x] S3.3 Marcar como vendido: formulario (lugar, precio real/sugerido) → crea `venta` + actualiza artículo
+- [x] S3.4 Marcar como descartado desde Detalle (motivo obligatorio)
+- [x] S3.5 Lógica pura: `filtrarArticulos`, `ordenarArticulos`, `buscarArticulos`
+- [x] S3.6 Lógica pura: `venderArticulo`, `descartarArticulo`
+- [x] S3.7 Tests (extender test.mjs) + verificación
+
 ## Evidencia de commits
 
 | Commit | Tarea | Notas |
@@ -45,3 +55,4 @@ Concepto: `Concepto_PWA_VentaCositas.md` (alcance congelado D1–D9)
 | `1bac172` | chore | init proyecto: concepto, tracking ODD, scaffolding |
 | `06178f3` | S1.1–S1.7 | shell PWA completo (14/14 tests verdes, verificado por gentle-ai-verify) |
 | `26d7725` | S2.1–S2.7 | modo Cositas completo (28/28 tests verdes, verificado) |
+| `788c2ec` | S3.1–S3.7 | modo Gestión + Detalle completo (49/49 tests verdes, verificado) |
