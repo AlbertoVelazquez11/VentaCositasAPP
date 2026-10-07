@@ -14,7 +14,7 @@ Concepto: `Concepto_PWA_VentaCositas.md` (alcance congelado D1–D9)
 ## Plan de sprints
 
 1. **Shell PWA** — hash router, store, IndexedDB, SW, manifest, Inicio — **COMPLETO**
-2. **Modo Cositas** — alta, edición, swipe-descarte (confirmación+motivo), compresión de fotos
+2. **Modo Cositas** — alta, edición, swipe-descarte (confirmación+motivo), compresión de fotos — **COMPLETO**
 3. **Modo Gestión + Detalle** — filtros, orden, búsqueda, vender (genera `ventas`), descartar
 4. **Historial + Config + QA**
 
@@ -28,9 +28,20 @@ Concepto: `Concepto_PWA_VentaCositas.md` (alcance congelado D1–D9)
 - [x] S1.6 Vista Inicio (Gestionar / Historial / Config) + navegación
 - [x] S1.7 Tests deterministas (`negocio`, `store`, `router`) + verificación
 
+## Sprint 2 — Tareas
+
+- [x] S2.1 Vista Artículos: reemplazar placeholder `#/articulos` por vista con toggle de modo (Cositas / Gestión)
+- [x] S2.2 Modo Cositas: listado simple de artículos (db → store → render)
+- [x] S2.3 Alta de artículo: formulario + compresión de foto + guardado (estatus inicial `almacenado`)
+- [x] S2.4 Edición de artículo: seleccionar → editar campos → guardar
+- [x] S2.5 Swipe-descarte: swipe izquierda + confirmación + motivo → `descartado`
+- [x] S2.6 Componentes: `modal` (motivo), `toast`, `swipe-item`, util de compresión de imagen
+- [x] S2.7 Lógica pura + tests: `validarArticulo`, `crearArticulo`, `calcularDimensiones` (test-first)
+
 ## Evidencia de commits
 
 | Commit | Tarea | Notas |
 | --- | --- | --- |
 | `1bac172` | chore | init proyecto: concepto, tracking ODD, scaffolding |
 | `06178f3` | S1.1–S1.7 | shell PWA completo (14/14 tests verdes, verificado por gentle-ai-verify) |
+| `26d7725` | S2.1–S2.7 | modo Cositas completo (28/28 tests verdes, verificado) |
