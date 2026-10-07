@@ -1,7 +1,17 @@
-// views/articulos.js — vista #/articulos: modo Cositas (funcional) + modo Gestión (placeholder Sprint 3).
+// views/articulos.js — vista #/articulos: modo Cositas (funcional) + modo Gestión (Sprint 3).
 import { store } from '../store.js';
 import { getAll, put } from '../db.js';
-import { ESTATUS, crearArticulo, validarArticulo, esTerminal } from '../negocio.js';
+import {
+  ESTATUS,
+  crearArticulo,
+  validarArticulo,
+  esTerminal,
+  filtrarArticulos,
+  ordenarArticulos,
+  buscarArticulos,
+  descartarArticulo,
+  venderArticulo,
+} from '../negocio.js';
 import { comprimirImagen } from '../utils/imagen.js';
 import { Modal } from '../components/modal.js';
 import { mostrarToast } from '../components/toast.js';
@@ -25,6 +35,11 @@ const BADGE_ESTATUS = {
 
 // El modo persiste en memoria durante la sesión; arranca en Cositas.
 let modo = 'cositas';
+
+// Estado del modo Gestión (persiste durante la sesión).
+let filtroGestion = 'todos';
+let ordenGestion = 'asc'; // 'asc' = precio ↑, 'desc' = precio ↓
+let busquedaGestion = '';
 
 export const articulos = {
   title: 'Artículos',
@@ -97,16 +112,121 @@ export const articulos = {
     }
 
     function pintarGestion(containerEl) {
+      containerEl.querySelectorAll('img[src^="blob:"]').forEach((img) => URL.revokeObjectURL(img.src));
       containerEl.innerHTML = '';
-      const stub = document.createElement('div');
-      stub.className = 'stub';
-      stub.innerHTML = `
-        <div class="stub__icon">🗂️</div>
-        <div class="empty__title">Próximamente</div>
-        <p>El modo Gestión (edición avanzada, ventas y cambio de estatus) llega en el Sprint 3.</p>
-        <span class="badge badge--neutral">Disponible en un sprint posterior</span>
-      `;
-      containerEl.appendChild(stub);
+
+      const controles = document.createElement('div');
+      controles.className = 'gestion__controles';
+
+      const buscador = document.createElement('input');
+      buscador.type = 'text';
+      buscador.className = 'gestion__busqueda';
+      buscador.placeholder = 'Buscar por nombre, descripción o detalles…';
+      buscador.value = busquedaGestion;
+      buscador.setAttribute('aria-label', 'Buscar artículos');
+      buscador.addEventListener('input', () => {
+        busquedaGestion = buscador.value;
+        pintarResultadoGestion();
+      });
+
+      const chips = document.createElement('div');
+      chips.className = 'gestion__chips';
+      chips.setAttribute('role', 'group');
+      chips.setAttribute('aria-label', 'Filtrar por estatus');
+
+      const OPCIONES_FILTRO = [
+        { valor: 'todos', etiqueta: 'Todos' },
+        { valor: ESTATUS.ALMACENADO, etiqueta: 'Almacenado' },
+        { valor: ESTATUS.EN_VENTA, etiqueta: 'En venta' },
+        { valor: ESTATUS.VENDIDO, etiqueta: 'Vendido' },
+        { valor: ESTATUS.DESCARTADO, etiqueta: 'Descartado' },
+      ];
+
+      const chipsEls = OPCIONES_FILTRO.map((op) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip';
+        const texto = document.createElement('span');
+        texto.textContent = op.etiqueta;
+        const cuenta = document.createElement('span');
+        cuenta.className = 'chip__count';
+        b.append(texto, cuenta);
+        b.addEventListener('click', () => {
+          filtroGestion = op.valor;
+          pintarResultadoGestion();
+        });
+        chips.appendChild(b);
+        return { el: b, valor: op.valor, cuenta };
+      });
+
+      const orden = document.createElement('button');
+      orden.type = 'button';
+      orden.className = 'btn btn--ghost gestion__orden';
+      orden.addEventListener('click', () => {
+        ordenGestion = ordenGestion === 'asc' ? 'desc' : 'asc';
+        pintarResultadoGestion();
+      });
+
+      const listaEl = document.createElement('ul');
+      listaEl.className = 'articulos__list';
+
+      controles.append(buscador, chips, orden);
+      containerEl.append(controles, listaEl);
+
+      let listaBase = [];
+
+      (async () => {
+        let lista;
+        try {
+          lista = await getAll('articulos');
+          store.setState({ articulos: lista });
+        } catch (e) {
+          console.warn('No se pudo leer IndexedDB:', e);
+          lista = store.getState().articulos;
+        }
+        listaBase = lista;
+        pintarResultadoGestion();
+      })();
+
+      function pintarResultadoGestion() {
+        const filtradas = filtrarArticulos(listaBase, filtroGestion);
+        const buscadas = buscarArticulos(filtradas, busquedaGestion);
+        const ordenadas = ordenarArticulos(buscadas, { campo: 'precioSugerido', direccion: ordenGestion });
+
+        for (const chip of chipsEls) {
+          const activo = chip.valor === filtroGestion;
+          chip.el.classList.toggle('chip--active', activo);
+          chip.el.setAttribute('aria-pressed', String(activo));
+          const total = chip.valor === 'todos'
+            ? listaBase.length
+            : listaBase.filter((a) => a.estatus === chip.valor).length;
+          chip.cuenta.textContent = String(total);
+        }
+
+        orden.textContent = ordenGestion === 'asc' ? 'Precio ↑' : 'Precio ↓';
+        orden.setAttribute('aria-label', orden.textContent);
+
+        listaEl.querySelectorAll('img[src^="blob:"]').forEach((img) => URL.revokeObjectURL(img.src));
+        listaEl.innerHTML = '';
+
+        if (!ordenadas.length) {
+          const li = document.createElement('li');
+          const stub = document.createElement('div');
+          stub.className = 'stub';
+          stub.innerHTML = `
+            <div class="stub__icon">🔍</div>
+            <div class="empty__title">Sin resultados</div>
+            <p>No hay artículos que coincidan con los filtros.</p>
+          `;
+          li.appendChild(stub);
+          listaEl.appendChild(li);
+          return;
+        }
+
+        for (const articulo of ordenadas) {
+          listaEl.appendChild(crearFilaGestion(articulo));
+        }
+      }
     }
 
     function pintarLista(containerEl, lista) {
@@ -133,7 +253,7 @@ export const articulos = {
       containerEl.appendChild(ul);
     }
 
-    function crearFila(articulo) {
+    function construirFila(articulo) {
       const li = document.createElement('li');
       li.className = 'swipe-item';
       li.dataset.id = articulo.id;
@@ -170,6 +290,12 @@ export const articulos = {
 
       content.append(thumb, info);
       li.appendChild(content);
+      return { li, content };
+    }
+
+    function crearFila(articulo) {
+      const { li, content } = construirFila(articulo);
+      const terminal = esTerminal(articulo.estatus);
 
       content.addEventListener('click', () => {
         if (content._swipeReciente) {
@@ -185,6 +311,12 @@ export const articulos = {
         });
       }
 
+      return li;
+    }
+
+    function crearFilaGestion(articulo) {
+      const { li, content } = construirFila(articulo);
+      content.addEventListener('click', () => abrirDetalle(articulo));
       return li;
     }
 
@@ -369,6 +501,262 @@ export const articulos = {
                   m.cerrar();
                   mostrarToast('Artículo descartado.');
                   pintarLista(body, lista);
+                })
+                .catch(() => {
+                  m.mostrarError('No se pudo descartar el artículo.');
+                });
+            },
+          },
+        ],
+      });
+
+      modal.abrir();
+    }
+
+    function campoDetalle(etiqueta, texto) {
+      const wrap = document.createElement('div');
+      wrap.className = 'detalle__campo';
+      const label = document.createElement('span');
+      label.className = 'detalle__etiqueta';
+      label.textContent = etiqueta;
+      const valor = document.createElement('div');
+      valor.className = 'detalle__texto';
+      valor.textContent = texto;
+      wrap.append(label, valor);
+      return wrap;
+    }
+
+    function formatearFecha(ts) {
+      if (!ts) return '';
+      try {
+        return new Intl.DateTimeFormat('es-MX', { dateStyle: 'long' }).format(new Date(ts));
+      } catch {
+        return String(ts);
+      }
+    }
+
+    function abrirDetalle(articulo) {
+      const cuerpo = document.createElement('div');
+      cuerpo.className = 'detalle';
+
+      const foto = document.createElement('div');
+      foto.className = 'detalle__foto';
+      if (articulo.foto) {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(articulo.foto);
+        img.alt = articulo.nombre || '';
+        foto.appendChild(img);
+      } else {
+        foto.classList.add('detalle__foto--empty');
+        foto.textContent = '📦';
+      }
+
+      const nombre = document.createElement('h3');
+      nombre.className = 'detalle__nombre';
+      nombre.textContent = articulo.nombre;
+
+      const precio = document.createElement('div');
+      precio.className = 'detalle__precio';
+      precio.textContent = formatter.format(Number(articulo.precioSugerido) || 0);
+
+      const badge = document.createElement('span');
+      badge.className = `badge ${BADGE_ESTATUS[articulo.estatus] || 'badge--neutral'}`;
+      badge.textContent = ETIQUETAS_ESTATUS[articulo.estatus] || articulo.estatus;
+
+      cuerpo.append(foto, nombre, precio, badge);
+
+      if (articulo.descripcion) cuerpo.appendChild(campoDetalle('Descripción', articulo.descripcion));
+      if (articulo.detalles) cuerpo.appendChild(campoDetalle('Detalles', articulo.detalles));
+      if (articulo.estatus === ESTATUS.VENDIDO) {
+        cuerpo.appendChild(campoDetalle('Fecha de venta', formatearFecha(articulo.fechaVenta)));
+      }
+      if (articulo.estatus === ESTATUS.DESCARTADO) {
+        cuerpo.appendChild(campoDetalle('Motivo de descarte', articulo.motivoDescarte || '—'));
+      }
+
+      const modal = new Modal({
+        titulo: 'Detalle del artículo',
+        cuerpo,
+        botones: [{ texto: 'Cerrar', variante: 'ghost', onClick: (m) => m.cerrar() }],
+      });
+
+      if (!esTerminal(articulo.estatus)) {
+        const acciones = document.createElement('div');
+        acciones.className = 'detalle__acciones';
+
+        const btnVender = document.createElement('button');
+        btnVender.type = 'button';
+        btnVender.className = 'btn btn--primary btn--block';
+        btnVender.textContent = 'Marcar como vendido';
+        btnVender.addEventListener('click', () => {
+          modal.cerrar();
+          abrirFormularioVenta(articulo);
+        });
+
+        const btnDescartar = document.createElement('button');
+        btnDescartar.type = 'button';
+        btnDescartar.className = 'btn btn--danger btn--block';
+        btnDescartar.textContent = 'Marcar como descartado';
+        btnDescartar.addEventListener('click', () => {
+          modal.cerrar();
+          confirmarDescarteDesdeDetalle(articulo);
+        });
+
+        acciones.append(btnVender, btnDescartar);
+        cuerpo.appendChild(acciones);
+      }
+
+      modal.abrir();
+    }
+
+    function abrirFormularioVenta(articulo) {
+      const form = document.createElement('form');
+      form.className = 'formulario';
+      form.noValidate = true;
+
+      const erroresEl = document.createElement('div');
+      erroresEl.className = 'formulario__errores';
+      erroresEl.hidden = true;
+
+      const toggleWrap = document.createElement('label');
+      toggleWrap.className = 'venta__toggle';
+      const toggle = document.createElement('input');
+      toggle.type = 'checkbox';
+      toggle.checked = true;
+      const toggleTexto = document.createElement('span');
+      toggleTexto.textContent = 'Se vendió al precio sugerido';
+      toggleWrap.append(toggle, toggleTexto);
+
+      const precioCampo = (() => {
+        const label = document.createElement('label');
+        label.className = 'formulario__campo';
+        const span = document.createElement('span');
+        span.className = 'formulario__etiqueta';
+        span.textContent = 'Precio de venta (MXN)';
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.min = '0';
+        input.step = '0.01';
+        input.inputMode = 'decimal';
+        input.placeholder = '0.00';
+        input.value = articulo.precioSugerido ?? '';
+        label.append(span, input);
+        return { label, input };
+      })();
+
+      const lugarCampo = (() => {
+        const label = document.createElement('label');
+        label.className = 'formulario__campo';
+        const span = document.createElement('span');
+        span.className = 'formulario__etiqueta';
+        span.textContent = 'Lugar de venta';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'Ej. Feria, Mercado Libre, Instagram…';
+        label.append(span, input);
+        return { label, input };
+      })();
+
+      const sincronizar = () => {
+        precioCampo.label.classList.toggle('hidden', toggle.checked);
+      };
+      toggle.addEventListener('change', sincronizar);
+      sincronizar();
+
+      form.append(erroresEl, toggleWrap, precioCampo.label, lugarCampo.label);
+
+      const modal = new Modal({
+        titulo: 'Marcar como vendido',
+        cuerpo: form,
+        botones: [
+          { texto: 'Cancelar', variante: 'ghost', onClick: (m) => m.cerrar() },
+          { texto: 'Confirmar venta', variante: 'primary', onClick: (m) => guardar(m) },
+        ],
+      });
+
+      function mostrarErrores(mensaje) {
+        if (!mensaje) {
+          erroresEl.hidden = true;
+          erroresEl.textContent = '';
+          return;
+        }
+        erroresEl.textContent = mensaje;
+        erroresEl.hidden = false;
+      }
+
+      async function guardar(m) {
+        const vendidoAlSugerido = toggle.checked;
+        const precioVenta = vendidoAlSugerido
+          ? Number(articulo.precioSugerido)
+          : Number(precioCampo.input.value);
+
+        const datosVenta = {
+          lugarVenta: lugarCampo.input.value.trim(),
+          precioVenta,
+          vendidoAlPrecioSugerido: vendidoAlSugerido,
+        };
+
+        let resultado;
+        try {
+          resultado = venderArticulo(articulo, datosVenta);
+        } catch (e) {
+          mostrarErrores(e.message);
+          return;
+        }
+        mostrarErrores('');
+
+        try {
+          await put('ventas', resultado.venta);
+          await put('articulos', resultado.articulo);
+        } catch (e) {
+          console.warn('No se pudo guardar la venta:', e);
+          mostrarErrores('No se pudo guardar la venta.');
+          return;
+        }
+
+        const lista = store.getState().articulos.map((a) =>
+          a.id === articulo.id ? resultado.articulo : a
+        );
+        const ventas = [...store.getState().ventas, resultado.venta];
+        store.setState({ articulos: lista, ventas });
+
+        m.cerrar();
+        mostrarToast('Artículo vendido.');
+        pintar();
+      }
+
+      modal.abrir();
+    }
+
+    function confirmarDescarteDesdeDetalle(articulo) {
+      const modal = new Modal({
+        titulo: 'Descartar artículo',
+        cuerpo: `¿Descartar “${articulo.nombre}”? Esta acción no se puede deshacer.`,
+        motivo: true,
+        botones: [
+          { texto: 'Cancelar', variante: 'ghost', onClick: (m) => m.cerrar() },
+          {
+            texto: 'Descartar',
+            variante: 'danger',
+            onClick: (m, motivoTexto) => {
+              let actualizado;
+              try {
+                actualizado = descartarArticulo(articulo, motivoTexto);
+              } catch (e) {
+                m.mostrarError(e.message);
+                return;
+              }
+              m.limpiarError();
+
+              put('articulos', actualizado)
+                .then(() => {
+                  const lista = store.getState().articulos.map((a) =>
+                    a.id === articulo.id ? actualizado : a
+                  );
+                  store.setState({ articulos: lista });
+                  m.cerrar();
+                  mostrarToast('Artículo descartado.');
+                  pintar();
                 })
                 .catch(() => {
                   m.mostrarError('No se pudo descartar el artículo.');

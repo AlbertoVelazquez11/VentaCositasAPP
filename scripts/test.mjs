@@ -1,7 +1,19 @@
 // Tests deterministas de los módulos puros del shell (Sprint 1).
 // Sin dependencias: usa node:assert. Uso: node scripts/test.mjs
 import assert from 'node:assert/strict';
-import { ESTATUS, TRANSICIONES, puedeTransicionar, esTerminal, validarArticulo, crearArticulo } from '../Codigo/js/negocio.js';
+import {
+  ESTATUS,
+  TRANSICIONES,
+  puedeTransicionar,
+  esTerminal,
+  validarArticulo,
+  crearArticulo,
+  filtrarArticulos,
+  ordenarArticulos,
+  buscarArticulos,
+  descartarArticulo,
+  venderArticulo,
+} from '../Codigo/js/negocio.js';
 import { calcularDimensiones } from '../Codigo/js/utils/imagen.js';
 import { Store, store } from '../Codigo/js/store.js';
 import { parseHash } from '../Codigo/js/router.js';
@@ -234,6 +246,143 @@ t('calcularDimensiones redondea sin exceder maxLado', () => {
 t('calcularDimensiones devuelve cero para entrada inválida', () => {
   assert.deepEqual(calcularDimensiones(0, 0, 800), { ancho: 0, alto: 0 });
   assert.deepEqual(calcularDimensiones(-10, 100, 800), { ancho: 0, alto: 0 });
+});
+
+console.log('\nnegocio.js — Sprint 3: filtrar / ordenar / buscar / descartar / vender');
+
+const fixtureArticulos = [
+  { id: 'a1', nombre: 'Llavero tejido', descripcion: 'Hecho a mano', detalles: 'Algodón', precioSugerido: 50, estatus: ESTATUS.ALMACENADO, fechaRegistro: 300 },
+  { id: 'a2', nombre: 'Taza de barro', descripcion: 'Pintada a mano', detalles: 'Cerámica', precioSugerido: 80, estatus: ESTATUS.EN_VENTA, fechaRegistro: 100 },
+  { id: 'a3', nombre: 'Pulsera', descripcion: 'Cuero', detalles: 'Ajustable', precioSugerido: 30, estatus: ESTATUS.VENDIDO, fechaRegistro: 200 },
+  { id: 'a4', nombre: 'Gorra', descripcion: 'Bordada', detalles: 'Algodón', precioSugerido: 120, estatus: ESTATUS.DESCARTADO, fechaRegistro: 400 },
+];
+
+t('filtrarArticulos con null devuelve todos', () => {
+  assert.deepEqual(filtrarArticulos(fixtureArticulos, null), fixtureArticulos);
+});
+
+t("filtrarArticulos con 'todos' devuelve todos", () => {
+  assert.equal(filtrarArticulos(fixtureArticulos, 'todos').length, 4);
+});
+
+t('filtrarArticulos filtra por estatus', () => {
+  assert.deepEqual(filtrarArticulos(fixtureArticulos, ESTATUS.VENDIDO).map((a) => a.id), ['a3']);
+});
+
+t('filtrarArticulos con estatus inexistente devuelve []', () => {
+  assert.deepEqual(filtrarArticulos(fixtureArticulos, 'desconocido'), []);
+});
+
+t('ordenarArticulos por precioSugerido asc', () => {
+  const r = ordenarArticulos(fixtureArticulos, { campo: 'precioSugerido', direccion: 'asc' });
+  assert.deepEqual(r.map((a) => a.precioSugerido), [30, 50, 80, 120]);
+});
+
+t('ordenarArticulos por precioSugerido desc', () => {
+  const r = ordenarArticulos(fixtureArticulos, { campo: 'precioSugerido', direccion: 'desc' });
+  assert.deepEqual(r.map((a) => a.precioSugerido), [120, 80, 50, 30]);
+});
+
+t('ordenarArticulos por fechaRegistro desc', () => {
+  const r = ordenarArticulos(fixtureArticulos, { campo: 'fechaRegistro', direccion: 'desc' });
+  assert.deepEqual(r.map((a) => a.id), ['a4', 'a1', 'a3', 'a2']);
+});
+
+t('ordenarArticulos no muta el original', () => {
+  const antes = fixtureArticulos.map((a) => a.id).join(',');
+  ordenarArticulos(fixtureArticulos, { campo: 'precioSugerido', direccion: 'desc' });
+  assert.equal(fixtureArticulos.map((a) => a.id).join(','), antes);
+});
+
+t('buscarArticulos con texto vacío devuelve todos', () => {
+  assert.equal(buscarArticulos(fixtureArticulos, '').length, 4);
+  assert.equal(buscarArticulos(fixtureArticulos, '   ').length, 4);
+});
+
+t('buscarArticulos busca en nombre case-insensitive', () => {
+  assert.deepEqual(buscarArticulos(fixtureArticulos, 'TAZA').map((a) => a.id), ['a2']);
+});
+
+t('buscarArticulos busca en descripcion y detalles', () => {
+  assert.deepEqual(buscarArticulos(fixtureArticulos, 'algodón').map((a) => a.id).sort(), ['a1', 'a4']);
+  assert.deepEqual(buscarArticulos(fixtureArticulos, 'cuero').map((a) => a.id), ['a3']);
+});
+
+t('buscarArticulos sin coincidencias devuelve []', () => {
+  assert.deepEqual(buscarArticulos(fixtureArticulos, 'xyz'), []);
+});
+
+t('buscarArticulos aplica trim al texto', () => {
+  assert.deepEqual(buscarArticulos(fixtureArticulos, '  taza  ').map((a) => a.id), ['a2']);
+});
+
+t('descartarArticulo devuelve nuevo objeto sin mutar el original', () => {
+  const a = { id: 'x', nombre: 'Taza', estatus: ESTATUS.ALMACENADO, precioSugerido: 50 };
+  const r = descartarArticulo(a, 'Se rompió', { ahora: 123 });
+  assert.equal(r.estatus, ESTATUS.DESCARTADO);
+  assert.equal(r.motivoDescarte, 'Se rompió');
+  assert.equal(r.fechaDescarte, 123);
+  assert.equal(a.estatus, ESTATUS.ALMACENADO);
+  assert.equal('motivoDescarte' in a, false);
+  assert.notEqual(r, a);
+});
+
+t('descartarArticulo con motivo vacío lanza Error', () => {
+  assert.throws(() => descartarArticulo({ estatus: ESTATUS.ALMACENADO }, ''), /motivo/i);
+  assert.throws(() => descartarArticulo({ estatus: ESTATUS.ALMACENADO }, '   '), /motivo/i);
+});
+
+t('descartarArticulo con estado terminal lanza Error', () => {
+  assert.throws(() => descartarArticulo({ estatus: ESTATUS.VENDIDO }, 'Razón'), /descartar/i);
+  assert.throws(() => descartarArticulo({ estatus: ESTATUS.DESCARTADO }, 'Razón'), /descartar/i);
+});
+
+t('venderArticulo vende artículo activo y arma la venta', () => {
+  const a = { id: 'a1', nombre: 'Taza', precioSugerido: 80, estatus: ESTATUS.ALMACENADO, descripcion: 'x' };
+  const { articulo, venta } = venderArticulo(
+    a,
+    { lugarVenta: 'Feria', precioVenta: 80, vendidoAlPrecioSugerido: true },
+    { id: 'v1', ahora: 500 }
+  );
+  assert.equal(articulo.estatus, ESTATUS.VENDIDO);
+  assert.equal(articulo.fechaVenta, 500);
+  assert.equal(articulo.ventaId, 'v1');
+  assert.equal(a.estatus, ESTATUS.ALMACENADO, 'no debe mutar el original');
+  assert.equal(venta.id, 'v1');
+  assert.equal(venta.articuloId, 'a1');
+  assert.equal(venta.nombre, 'Taza');
+  assert.equal(venta.precioSugerido, 80);
+  assert.equal(venta.precioVenta, 80);
+  assert.equal(venta.lugarVenta, 'Feria');
+  assert.equal(venta.vendidoAlPrecioSugerido, true);
+  assert.equal(venta.fechaVenta, 500);
+});
+
+t('venderArticulo con precio <= 0 lanza Error', () => {
+  assert.throws(() => venderArticulo({ estatus: ESTATUS.EN_VENTA }, { lugarVenta: 'Feria', precioVenta: 0 }), /precio/i);
+  assert.throws(() => venderArticulo({ estatus: ESTATUS.EN_VENTA }, { lugarVenta: 'Feria', precioVenta: -5 }), /precio/i);
+});
+
+t('venderArticulo con lugarVenta vacío lanza Error', () => {
+  assert.throws(() => venderArticulo({ estatus: ESTATUS.EN_VENTA }, { lugarVenta: '', precioVenta: 10 }), /lugar/i);
+  assert.throws(() => venderArticulo({ estatus: ESTATUS.EN_VENTA }, { lugarVenta: '   ', precioVenta: 10 }), /lugar/i);
+});
+
+t('venderArticulo con estado terminal lanza Error', () => {
+  assert.throws(() => venderArticulo({ estatus: ESTATUS.VENDIDO }, { lugarVenta: 'Feria', precioVenta: 10 }), /vender/i);
+  assert.throws(() => venderArticulo({ estatus: ESTATUS.DESCARTADO }, { lugarVenta: 'Feria', precioVenta: 10 }), /vender/i);
+});
+
+t('venderArticulo genera id y fecha cuando no se inyectan', () => {
+  const { articulo, venta } = venderArticulo(
+    { id: 'a9', nombre: 'X', estatus: ESTATUS.ALMACENADO },
+    { lugarVenta: 'Feria', precioVenta: 10 }
+  );
+  assert.equal(typeof venta.id, 'string');
+  assert.ok(venta.id.length > 0);
+  assert.equal(articulo.ventaId, venta.id);
+  assert.equal(typeof venta.fechaVenta, 'number');
+  assert.ok(venta.fechaVenta > 0);
 });
 
 console.log(`\n${passed} ok, ${failed} fallaron`);

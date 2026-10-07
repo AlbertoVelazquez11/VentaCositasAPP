@@ -33,7 +33,7 @@ export function esTerminal(estatus) {
 }
 
 /** Genera un UUID v4 con fallback seguro (crypto.randomUUID cuando está disponible). */
-function generarUUID() {
+export function generarUUID() {
   const c = globalThis.crypto;
   if (c && typeof c.randomUUID === 'function') {
     return c.randomUUID();
@@ -84,4 +84,127 @@ export function crearArticulo(datos = {}, { id, ahora } = {}) {
   };
   if (datos.foto != null) articulo.foto = datos.foto;
   return articulo;
+}
+
+/**
+ * Filtra artículos por estatus. `null`/`'todos'` (o undefined) devuelve todos (copia).
+ * Cualquier otro estatus devuelve solo los que coincidan; estatus inexistente → [].
+ * @param {Array} articulos
+ * @param {string|null} estatus
+ */
+export function filtrarArticulos(articulos, estatus) {
+  const lista = Array.isArray(articulos) ? articulos : [];
+  if (estatus == null || estatus === 'todos') return [...lista];
+  return lista.filter((a) => a?.estatus === estatus);
+}
+
+/**
+ * Devuelve una COPIA ordenada (no muta el original).
+ * Soporta `precioSugerido` asc/desc y `fechaRegistro` (por defecto asc; usar 'desc' para
+ * el orden de más reciente primero). Valores no numéricos ordenan como 0.
+ * @param {Array} articulos
+ * @param {{campo?: string, direccion?: 'asc'|'desc'}} [opciones]
+ */
+export function ordenarArticulos(articulos, { campo = 'precioSugerido', direccion = 'asc' } = {}) {
+  const copia = Array.isArray(articulos) ? [...articulos] : [];
+  const factor = direccion === 'desc' ? -1 : 1;
+  return copia.sort((a, b) => {
+    const an = Number.isFinite(Number(a?.[campo])) ? Number(a?.[campo]) : 0;
+    const bn = Number.isFinite(Number(b?.[campo])) ? Number(b?.[campo]) : 0;
+    return (an - bn) * factor;
+  });
+}
+
+/**
+ * Búsqueda case-insensitive (trim + lowercase) en `nombre`, `descripcion` y `detalles`.
+ * Texto vacío devuelve todos (copia). Sin coincidencias devuelve [].
+ * @param {Array} articulos
+ * @param {string} texto
+ */
+export function buscarArticulos(articulos, texto) {
+  const lista = Array.isArray(articulos) ? articulos : [];
+  const q = typeof texto === 'string' ? texto.trim().toLowerCase() : '';
+  if (!q) return [...lista];
+  return lista.filter((a) => {
+    return [a?.nombre, a?.descripcion, a?.detalles].some(
+      (campo) => typeof campo === 'string' && campo.toLowerCase().includes(q)
+    );
+  });
+}
+
+/**
+ * Marca un artículo como descartado. Devuelve un NUEVO objeto (no muta el original).
+ * Lanza `Error` si el motivo está vacío o si el estatus ya es terminal.
+ * @param {Object} articulo
+ * @param {string} motivo
+ * @param {{ahora?: number}} [opciones]
+ */
+export function descartarArticulo(articulo, motivo, { ahora } = {}) {
+  if (!articulo || typeof articulo !== 'object') {
+    throw new Error('Artículo inválido.');
+  }
+  if (typeof motivo !== 'string' || !motivo.trim()) {
+    throw new Error('El motivo es obligatorio.');
+  }
+  if (esTerminal(articulo.estatus)) {
+    throw new Error('No se puede descartar un artículo vendido o descartado.');
+  }
+  return {
+    ...articulo,
+    estatus: ESTATUS.DESCARTADO,
+    motivoDescarte: motivo.trim(),
+    fechaDescarte: ahora ?? Date.now(),
+  };
+}
+
+/**
+ * Marca un artículo como vendido y arma el registro de venta.
+ * Valida: estatus activo (almacenado/en-venta), `lugarVenta` no vacío y `precioVenta > 0`.
+ * Lanza `Error` ante cualquier validación fallida. Devuelve `{ articulo, venta }` sin mutar el original.
+ * @param {Object} articulo
+ * @param {{lugarVenta?: string, precioVenta?: number, vendidoAlPrecioSugerido?: boolean}} [datosVenta]
+ * @param {{id?: string, ahora?: number}} [opciones]
+ */
+export function venderArticulo(articulo, datosVenta = {}, { id, ahora } = {}) {
+  if (!articulo || typeof articulo !== 'object') {
+    throw new Error('Artículo inválido.');
+  }
+  if (!puedeTransicionar(articulo.estatus, ESTATUS.VENDIDO)) {
+    throw new Error('Solo se pueden vender artículos almacenados o en venta.');
+  }
+
+  const d = datosVenta || {};
+  const lugarVenta = typeof d.lugarVenta === 'string' ? d.lugarVenta.trim() : '';
+  if (!lugarVenta) {
+    throw new Error('El lugar de venta es obligatorio.');
+  }
+
+  const precioVenta = Number(d.precioVenta);
+  if (!Number.isFinite(precioVenta) || precioVenta <= 0) {
+    throw new Error('El precio de venta debe ser mayor a 0.');
+  }
+
+  const fechaVenta = ahora ?? Date.now();
+  const ventaId = id ?? generarUUID();
+  const vendidoAlPrecioSugerido = Boolean(d.vendidoAlPrecioSugerido);
+
+  const articuloVendido = {
+    ...articulo,
+    estatus: ESTATUS.VENDIDO,
+    fechaVenta,
+    ventaId,
+  };
+
+  const venta = {
+    id: ventaId,
+    articuloId: articulo.id,
+    nombre: articulo.nombre,
+    precioSugerido: articulo.precioSugerido,
+    precioVenta,
+    lugarVenta,
+    vendidoAlPrecioSugerido,
+    fechaVenta,
+  };
+
+  return { articulo: articuloVendido, venta };
 }
