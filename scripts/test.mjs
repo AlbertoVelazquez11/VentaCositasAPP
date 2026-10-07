@@ -13,6 +13,9 @@ import {
   buscarArticulos,
   descartarArticulo,
   venderArticulo,
+  formatearFecha,
+  resolverTema,
+  sumarVentas,
 } from '../Codigo/js/negocio.js';
 import { calcularDimensiones } from '../Codigo/js/utils/imagen.js';
 import { Store, store } from '../Codigo/js/store.js';
@@ -383,6 +386,69 @@ t('venderArticulo genera id y fecha cuando no se inyectan', () => {
   assert.equal(articulo.ventaId, venta.id);
   assert.equal(typeof venta.fechaVenta, 'number');
   assert.ok(venta.fechaVenta > 0);
+});
+
+console.log('\nnegocio.js — Sprint 4: formatearFecha / resolverTema / sumarVentas');
+
+t('formatearFecha devuelve cadena legible para ts válido', () => {
+  const r = formatearFecha(Date.UTC(2024, 2, 12));
+  assert.equal(typeof r, 'string');
+  assert.ok(r.length > 0);
+});
+
+t('formatearFecha devuelve "" para ts inválido o nulo', () => {
+  assert.equal(formatearFecha(null), '');
+  assert.equal(formatearFecha(undefined), '');
+  assert.equal(formatearFecha(''), '');
+  assert.equal(formatearFecha('abc'), '');
+  assert.equal(formatearFecha(NaN), '');
+  assert.equal(formatearFecha(Infinity), '');
+});
+
+t('formatearFecha acepta timestamp numérico y string numérico', () => {
+  assert.ok(formatearFecha(0).length > 0);
+  assert.ok(formatearFecha('0').length > 0);
+});
+
+t("resolverTema fuerza 'claro' y 'oscuro'", () => {
+  assert.equal(resolverTema('claro', true), 'claro');
+  assert.equal(resolverTema('claro', false), 'claro');
+  assert.equal(resolverTema('oscuro', true), 'oscuro');
+  assert.equal(resolverTema('oscuro', false), 'oscuro');
+});
+
+t("resolverTema con 'auto' usa sistemaOscuro", () => {
+  assert.equal(resolverTema('auto', true), 'oscuro');
+  assert.equal(resolverTema('auto', false), 'claro');
+});
+
+t('resolverTema con preferencia desconocida usa sistemaOscuro', () => {
+  assert.equal(resolverTema('cualquier-cosa', true), 'oscuro');
+  assert.equal(resolverTema(undefined, false), 'claro');
+  assert.equal(resolverTema(null, true), 'oscuro');
+});
+
+const fixtureVentas = [
+  { id: 'v1', precioVenta: 50 },
+  { id: 'v2', precioVenta: 80.5 },
+  { id: 'v3', precioVenta: '30' },
+  { id: 'v4', precioVenta: 'abc' },
+  { id: 'v5' },
+  { id: 'v6', precioVenta: null },
+];
+
+t('sumarVentas suma precios numéricos y strings numéricos', () => {
+  assert.equal(sumarVentas(fixtureVentas), 160.5);
+});
+
+t('sumarVentas ignora valores no numéricos', () => {
+  assert.equal(sumarVentas([{ precioVenta: 'abc' }, { precioVenta: NaN }, {}]), 0);
+});
+
+t('sumarVentas devuelve 0 para entrada vacía o no array', () => {
+  assert.equal(sumarVentas([]), 0);
+  assert.equal(sumarVentas(null), 0);
+  assert.equal(sumarVentas(undefined), 0);
 });
 
 console.log(`\n${passed} ok, ${failed} fallaron`);

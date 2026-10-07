@@ -715,3 +715,106 @@ img {
   gap: var(--s-2);
   font-weight: 600;
 }
+
+/* Historial de ventas */
+.historial {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.historial__resumen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.historial__resumen-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text-muted);
+}
+
+.historial__resumen-total {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--c-primary);
+}
+
+.historial__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.historial__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.historial__principal {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.historial__nombre {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.historial__lugar {
+  font-size: 14px;
+  color: var(--c-text-muted);
+}
+
+.historial__meta {
+  flex: 0 0 auto;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.historial__precio {
+  font-weight: 700;
+  color: var(--c-primary);
+}
+
+.historial__fecha {
+  font-size: 13px;
+  color: var(--c-text-muted);
+}
+
+/* Configuración */
+.config {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.config__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.config__app-nombre {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.config__version {
+  font-size: 14px;
+  color: var(--c-text-muted);
+}
+
+.config__descripcion {
+  color: var(--c-text-muted);
+}

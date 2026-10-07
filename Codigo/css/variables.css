@@ -66,3 +66,30 @@
     --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.6);
   }
 }
+
+/* Tema manual (el atributo data-tema gana a la media query por especificidad). */
+:root[data-tema="oscuro"] {
+  --c-bg: #0B1023;
+  --c-surface: #151B33;
+  --c-surface-2: #1E2748;
+  --c-border: #333E6B;
+  --c-text: #E0E7FF;
+  --c-text-muted: #A5B4FC;
+  --c-text-invert: #1E1B4B;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-tema="claro"] {
+  --c-bg: #EEF2FF;
+  --c-surface: #FFFFFF;
+  --c-surface-2: #E0E7FF;
+  --c-border: #C7D2FE;
+  --c-text: #1E1B4B;
+  --c-text-muted: #64748B;
+  --c-text-invert: #FFFFFF;
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.06);
+  --shadow-md: 0 4px 12px rgba(17, 24, 39, 0.10);
+  --shadow-lg: 0 12px 28px rgba(17, 24, 39, 0.16);
+}
