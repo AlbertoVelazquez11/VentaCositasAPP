@@ -57,6 +57,12 @@ Concepto: `Concepto_PWA_VentaCositas.md` (alcance congelado D1–D9)
 - [x] S4.5 Tests (extender test.mjs) + `node --check` integral
 - [x] S4.6 QA/pulido: navegación Home→Historial→Config + consistencia store↔db
 
+## Correcciones de validación (post-QA)
+
+- [x] C1 Flecha "volver" en Artículos, Historial y Configuración (barra superior con back)
+- [x] C2 Selector de estatus (Almacenado ⇄ En venta) en edición de artículos activos
+- [x] C3 Botón de configuración arriba a la derecha (barra superior en Inicio)
+
 ## Evidencia de commits
 
 | Commit | Tarea | Notas |
@@ -66,3 +72,4 @@ Concepto: `Concepto_PWA_VentaCositas.md` (alcance congelado D1–D9)
 | `26d7725` | S2.1–S2.7 | modo Cositas completo (28/28 tests verdes, verificado) |
 | `788c2ec` | S3.1–S3.7 | modo Gestión + Detalle completo (49/49 tests verdes, verificado) |
 | `2816922` | S4.1–S4.6 | Historial + Config + QA (58/58 tests verdes, verificado) |
+| `b8ab9e7` | C1–C3 | correcciones UI: volver, selector de estatus, config arriba-derecha |
