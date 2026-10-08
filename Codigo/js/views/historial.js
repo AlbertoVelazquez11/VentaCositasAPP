@@ -2,6 +2,7 @@
 import { store } from '../store.js';
 import { getAll } from '../db.js';
 import { ordenarArticulos, sumarVentas, formatearFecha } from '../negocio.js';
+import { crearHeader } from '../components/header.js';
 
 const formatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 
@@ -12,9 +13,7 @@ export const historial = {
     view.className = 'view historial';
     container.appendChild(view);
 
-    const header = document.createElement('h1');
-    header.textContent = 'Historial de ventas';
-    view.appendChild(header);
+    view.appendChild(crearHeader({ titulo: 'Historial de ventas', volver: true, volverA: '/' }));
 
     const resumen = document.createElement('div');
     resumen.className = 'historial__resumen card';

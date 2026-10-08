@@ -122,6 +122,58 @@ img {
   margin-top: var(--s-4);
 }
 
+/* Barra superior (topbar) */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: calc(var(--touch) + var(--safe-top));
+  padding: var(--safe-top) var(--s-4) var(--s-2);
+  margin: calc(0px - var(--safe-top) - var(--s-4)) calc(0px - var(--s-4)) var(--s-4);
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.topbar__back,
+.topbar__accion {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: var(--r-md);
+  background: transparent;
+  color: var(--c-primary);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.topbar__accion {
+  text-decoration: none;
+}
+
+.topbar__back:active,
+.topbar__accion:active {
+  background: var(--c-surface-2);
+}
+
+.topbar__titulo {
+  flex: 1;
+  min-width: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Botones */
 .btn {
   display: inline-flex;
@@ -210,10 +262,10 @@ img {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   text-align: center;
   gap: var(--s-4);
-  padding-top: calc(var(--safe-top) + var(--s-8));
+  padding-top: calc(var(--safe-top) + var(--s-4));
   padding-bottom: calc(var(--safe-bottom) + var(--s-8));
 }
 
@@ -230,6 +282,7 @@ img {
 .home__tagline {
   color: var(--c-text-muted);
   max-width: 280px;
+  margin-top: auto;
 }
 
 .home__actions {
@@ -239,6 +292,7 @@ img {
   width: 100%;
   max-width: 320px;
   margin-top: var(--s-4);
+  margin-bottom: auto;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -534,6 +588,7 @@ img {
 
 .formulario input[type="text"],
 .formulario input[type="number"],
+.formulario select,
 .formulario textarea {
   width: 100%;
   padding: var(--s-3);

@@ -1,5 +1,6 @@
 // views/config.js — vista #/config: selector de tema + acerca de (Sprint 4).
 import { resolverTema } from '../negocio.js';
+import { crearHeader } from '../components/header.js';
 
 const CLAVE_TEMA = 'ventacositas.tema';
 
@@ -48,9 +49,7 @@ export const config = {
     view.className = 'view config';
     container.appendChild(view);
 
-    const header = document.createElement('h1');
-    header.textContent = 'Configuración';
-    view.appendChild(header);
+    view.appendChild(crearHeader({ titulo: 'Configuración', volver: true, volverA: '/' }));
 
     // ── Tema ────────────────────────────────────────────────
     const temaSection = document.createElement('section');

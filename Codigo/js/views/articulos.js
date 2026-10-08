@@ -16,6 +16,7 @@ import { comprimirImagen } from '../utils/imagen.js';
 import { Modal } from '../components/modal.js';
 import { mostrarToast } from '../components/toast.js';
 import { activarSwipe } from '../components/swipe-item.js';
+import { crearHeader } from '../components/header.js';
 
 const formatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 
@@ -48,11 +49,7 @@ export const articulos = {
     view.className = 'view articulos';
     container.appendChild(view);
 
-    const header = document.createElement('header');
-    header.className = 'articulos__header';
-    const title = document.createElement('h1');
-    title.textContent = 'Artículos';
-    header.appendChild(title);
+    const header = crearHeader({ titulo: 'Artículos', volver: true, volverA: '/' });
 
     const toggle = document.createElement('div');
     toggle.className = 'segmented';
@@ -381,12 +378,30 @@ export const articulos = {
       }
       fotoPreview.appendChild(fotoInput);
 
+      let estatusSelect = null;
+      if (articulo && !esTerminal(articulo.estatus)) {
+        estatusSelect = document.createElement('select');
+        estatusSelect.name = 'estatus';
+        estatusSelect.setAttribute('aria-label', 'Estatus');
+
+        const opAlmacenado = document.createElement('option');
+        opAlmacenado.value = ESTATUS.ALMACENADO;
+        opAlmacenado.textContent = 'Almacenado';
+        const opEnVenta = document.createElement('option');
+        opEnVenta.value = ESTATUS.EN_VENTA;
+        opEnVenta.textContent = 'En venta';
+
+        estatusSelect.append(opAlmacenado, opEnVenta);
+        estatusSelect.value = articulo.estatus;
+      }
+
       form.append(
         erroresEl,
         campo('Nombre', nombreInput),
         campo('Descripción', descripcionInput),
         campo('Detalles', detallesInput),
         campo('Precio sugerido (MXN)', precioInput),
+        ...(estatusSelect ? [campo('Estatus', estatusSelect)] : []),
         campo('Foto', fotoPreview)
       );
 
@@ -440,6 +455,7 @@ export const articulos = {
           descripcion: datos.descripcion,
           detalles: datos.detalles,
           precioSugerido: Number(datos.precioSugerido),
+          ...(estatusSelect ? { estatus: estatusSelect.value } : {}),
         };
 
         const guardado = articulo
