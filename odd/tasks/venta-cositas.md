@@ -73,3 +73,4 @@ Concepto: `Concepto_PWA_VentaCositas.md` (alcance congelado D1–D9)
 | `788c2ec` | S3.1–S3.7 | modo Gestión + Detalle completo (49/49 tests verdes, verificado) |
 | `2816922` | S4.1–S4.6 | Historial + Config + QA (58/58 tests verdes, verificado) |
 | `b8ab9e7` | C1–C3 | correcciones UI: volver, selector de estatus, config arriba-derecha |
+| `881fa45` | fix | topbar compacto (no solapa toggle) + brand de inicio restaurado (SW v5) |
