@@ -13,10 +13,11 @@ export const home = {
     accionConfig.setAttribute('href', '#/config');
     accionConfig.textContent = '⚙️';
 
-    const header = crearHeader({
-      titulo: 'VentaCositas',
-      accionDerecha: accionConfig,
-    });
+    const header = crearHeader({ accionDerecha: accionConfig });
+
+    const brand = document.createElement('div');
+    brand.className = 'home__brand';
+    brand.textContent = 'VentaCositas';
 
     const tagline = document.createElement('div');
     tagline.className = 'home__tagline';
@@ -29,7 +30,7 @@ export const home = {
       <a class="btn btn--ghost" href="#/historial">🧾 Historial</a>
     `;
 
-    view.append(header, tagline, acciones);
+    view.append(header, brand, tagline, acciones);
     container.appendChild(view);
   },
 };
