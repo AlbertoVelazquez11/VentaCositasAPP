@@ -33,7 +33,7 @@ export function calcularDimensiones(ancho, alto, maxLado) {
  * Solo navegador: usa Image, canvas y URL.createObjectURL.
  * @param {Blob} file
  * @param {{maxLado?: number, calidad?: number}} [opciones]
- * @returns {Promise<Blob>}
+ * @returns {Promise<string>} data URL (base64)
  */
 export function comprimirImagen(file, { maxLado = 800, calidad = 0.8 } = {}) {
   if (typeof document === 'undefined' || typeof Image === 'undefined') {
@@ -59,10 +59,9 @@ export function comprimirImagen(file, { maxLado = 800, calidad = 0.8 } = {}) {
         return;
       }
       ctx.drawImage(img, 0, 0, ancho, alto);
-      canvas.toBlob((blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error('No se pudo comprimir la imagen.'));
-      }, 'image/jpeg', calidad);
+      const dataUrl = canvas.toDataURL('image/jpeg', calidad);
+      if (dataUrl && dataUrl.startsWith('data:')) resolve(dataUrl);
+      else reject(new Error('No se pudo comprimir la imagen.'));
     };
 
     img.onerror = () => {
@@ -71,5 +70,19 @@ export function comprimirImagen(file, { maxLado = 800, calidad = 0.8 } = {}) {
     };
 
     img.src = url;
+  });
+}
+
+/**
+ * Convierte un Blob a data URL (base64). Útil para migrar fotos legadas guardadas como Blob.
+ * @param {Blob} blob
+ * @returns {Promise<string>}
+ */
+export function blobADataURL(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+    reader.readAsDataURL(blob);
   });
 }

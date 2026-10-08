@@ -12,13 +12,21 @@ import {
   descartarArticulo,
   venderArticulo,
 } from '../negocio.js';
-import { comprimirImagen } from '../utils/imagen.js';
+import { comprimirImagen, blobADataURL } from '../utils/imagen.js';
 import { Modal } from '../components/modal.js';
 import { mostrarToast } from '../components/toast.js';
 import { activarSwipe } from '../components/swipe-item.js';
 import { crearHeader } from '../components/header.js';
 
 const formatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+
+/** Devuelve un src usable para la foto (data URL directa, o object URL para Blobs legados). */
+function fotoSrc(foto) {
+  if (!foto) return null;
+  if (typeof foto === 'string') return foto;
+  if (typeof Blob !== 'undefined' && foto instanceof Blob) return URL.createObjectURL(foto);
+  return null;
+}
 
 const ETIQUETAS_ESTATUS = {
   [ESTATUS.ALMACENADO]: 'Almacenado',
@@ -264,7 +272,7 @@ export const articulos = {
       thumb.className = 'articulo__thumb';
       if (articulo.foto) {
         const img = document.createElement('img');
-        img.src = URL.createObjectURL(articulo.foto);
+        img.src = fotoSrc(articulo.foto);
         img.alt = '';
         thumb.appendChild(img);
       } else {
@@ -367,16 +375,64 @@ export const articulos = {
       fotoInput.type = 'file';
       fotoInput.name = 'foto';
       fotoInput.accept = 'image/*';
+      fotoInput.hidden = true;
 
       const fotoPreview = document.createElement('div');
       fotoPreview.className = 'formulario__foto';
-      if (articulo?.foto) {
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(articulo.foto);
-        img.alt = 'Foto actual';
-        fotoPreview.appendChild(img);
+
+      let fotoActual = articulo?.foto ?? null;
+
+      function pintarFoto() {
+        [...fotoPreview.children].forEach((c) => { if (c !== fotoInput) c.remove(); });
+        fotoPreview.appendChild(fotoInput);
+
+        if (fotoActual) {
+          const img = document.createElement('img');
+          img.className = 'formulario__foto-img';
+          img.src = fotoSrc(fotoActual);
+          img.alt = 'Foto';
+          fotoPreview.appendChild(img);
+        } else {
+          const vacio = document.createElement('div');
+          vacio.className = 'formulario__foto-empty';
+          vacio.textContent = 'Sin foto';
+          fotoPreview.appendChild(vacio);
+        }
+
+        const acciones = document.createElement('div');
+        acciones.className = 'formulario__foto-acciones';
+
+        const btnCambiar = document.createElement('button');
+        btnCambiar.type = 'button';
+        btnCambiar.className = 'btn btn--ghost';
+        btnCambiar.textContent = fotoActual ? 'Cambiar foto' : 'Agregar foto';
+        btnCambiar.addEventListener('click', () => fotoInput.click());
+        acciones.appendChild(btnCambiar);
+
+        if (fotoActual) {
+          const btnQuitar = document.createElement('button');
+          btnQuitar.type = 'button';
+          btnQuitar.className = 'btn btn--ghost';
+          btnQuitar.textContent = 'Quitar foto';
+          btnQuitar.addEventListener('click', () => { fotoActual = null; pintarFoto(); });
+          acciones.appendChild(btnQuitar);
+        }
+
+        fotoPreview.appendChild(acciones);
       }
-      fotoPreview.appendChild(fotoInput);
+
+      fotoInput.addEventListener('change', async () => {
+        const archivo = fotoInput.files?.[0];
+        if (!archivo) return;
+        try {
+          fotoActual = await comprimirImagen(archivo);
+          pintarFoto();
+        } catch (e) {
+          mostrarErrores({ foto: 'No se pudo procesar la imagen.' });
+        }
+      });
+
+      pintarFoto();
 
       let estatusSelect = null;
       if (articulo && !esTerminal(articulo.estatus)) {
@@ -439,13 +495,12 @@ export const articulos = {
           return;
         }
 
-        let foto = articulo?.foto ?? null;
-        const archivo = fotoInput.files?.[0];
-        if (archivo) {
+        let fotoFinal = fotoActual;
+        if (fotoFinal && typeof Blob !== 'undefined' && fotoFinal instanceof Blob) {
           try {
-            foto = await comprimirImagen(archivo);
+            fotoFinal = await blobADataURL(fotoFinal);
           } catch (e) {
-            mostrarErrores({ foto: 'No se pudo procesar la imagen.' });
+            mostrarErrores({ foto: 'No se pudo leer la imagen.' });
             return;
           }
         }
@@ -459,8 +514,8 @@ export const articulos = {
         };
 
         const guardado = articulo
-          ? { ...articulo, ...base, ...(foto ? { foto } : {}) }
-          : crearArticulo({ ...base, ...(foto ? { foto } : {}) });
+          ? { ...articulo, ...base, foto: fotoFinal }
+          : crearArticulo({ ...base, ...(fotoFinal ? { foto: fotoFinal } : {}) });
 
         try {
           await put('articulos', guardado);
@@ -559,7 +614,7 @@ export const articulos = {
       foto.className = 'detalle__foto';
       if (articulo.foto) {
         const img = document.createElement('img');
-        img.src = URL.createObjectURL(articulo.foto);
+        img.src = fotoSrc(articulo.foto);
         img.alt = articulo.nombre || '';
         foto.appendChild(img);
       } else {
